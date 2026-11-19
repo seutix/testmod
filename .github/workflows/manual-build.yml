@@ -1,0 +1,34 @@
+name: One-click Forge 1.12.2 build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build mod JAR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'microsoft'
+          cache: maven
+
+      - name: Build reobfuscated mod
+        run: bash build.sh
+
+      - name: Upload ready-to-install JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: fapcraft-forge-1.12.2
+          path: dist/*.jar
+          if-no-files-found: error
+          retention-days: 14
