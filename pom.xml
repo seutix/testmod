@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.trolmastercard</groupId>
+  <artifactId>fapcraft-1.12.2</artifactId>
+  <version>1.1.3</version>
+  <packaging>jar</packaging>
+  <name>Fapcraft 1.12.2 (sexmod)</name>
+  <description>Deobfuscated + decompiled + remapped reconstruction of the official Fapcraft v1.1 mod for Minecraft 1.12.2</description>
+
+  <properties>
+    <!-- Compile against the Java 8 API (not just -source/-target) so the
+         release jar keeps working on the old Java 8 installs 1.12.2 players use. -->
+    <maven.compiler.release>8</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>lib-repo</id>
+      <url>file://${project.basedir}/lib-repo</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <!-- Minecraft 1.12.2 (MCP-named; source uses readable names, reobfuscated to SRG at package time) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>mc-1.12.2-mcp</artifactId><version>1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- ASM (build-time only, used by the SRG reobfuscation step) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>asm</artifactId><version>7.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>local</groupId><artifactId>asm-commons</artifactId><version>7.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>local</groupId><artifactId>asm-tree</artifactId><version>7.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Forge 1.12.2 universal (SRG-remapped for compile consistency) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>forge-1.12.2-srg</artifactId><version>14.23.5.2860</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- GeckoLib 3 (bundled by the mod) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>geckolib3-1.12.2-mcp</artifactId><version>3.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <!-- jackson relocated to software.bernie.shadowed (bundled) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>geckolib3-shadowed-libs</artifactId><version>3.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <!-- RAR4/RAR5 reader (pure Java, no natives, Java 8+). Shaded into the mod jar.
+         NOTE: version has a 'v' prefix upstream (v2.0.3, NOT 2.0.3 — bare 2.0.3 404s).
+         SRG-safe: packages live under be.stef.rar* which MCRepack never remaps
+         (isSrgOwner only covers net/minecraft, net/minecraftforge,
+         com/trolmastercard, software/bernie/geckolib3), so no MCRepack change needed.
+         Only whole-archive extract() is public; listing is via Rar5Reader/
+         Rar4HeaderParser header parse, full bytes only on explicit Apply. -->
+    <dependency>
+      <groupId>io.github.realburst</groupId><artifactId>unrar5j</artifactId><version>v2.0.4</version>
+      <scope>compile</scope>
+    </dependency>
+    <!-- apache commons lang3 (bundled) -->
+    <dependency>
+      <groupId>local</groupId><artifactId>apache-commons-lang3</artifactId><version>1.12.2</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- runtime-only deps provided by the MC launcher -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId><artifactId>log4j-core</artifactId><version>2.8.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId><artifactId>log4j-api</artifactId><version>2.8.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.vecmath</groupId><artifactId>vecmath</artifactId><version>1.5.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId><artifactId>jsr305</artifactId><version>3.0.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId><artifactId>netty-all</artifactId><version>4.1.9.Final</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId><artifactId>guava</artifactId><version>21.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId><artifactId>gson</artifactId><version>2.8.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>it.unimi.dsi</groupId><artifactId>fastutil</artifactId><version>7.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId><artifactId>commons-io</artifactId><version>2.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId><artifactId>commons-codec</artifactId><version>1.10</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.java.dev.jna</groupId><artifactId>jna</artifactId><version>4.4.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mojang</groupId><artifactId>authlib</artifactId><version>1.5.25</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mojang</groupId><artifactId>realms</artifactId><version>1.10.22</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.mojang</groupId><artifactId>patchy</artifactId><version>1.3.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.lwjgl.lwjgl</groupId><artifactId>lwjgl</artifactId><version>2.9.4</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.lwjgl.lwjgl</groupId><artifactId>lwjgl_util</artifactId><version>2.9.4</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.minecraft</groupId><artifactId>launchwrapper</artifactId><version>1.12</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- tests only (junit is in the local m2 repo; run with: mvn -o test) -->
+    <dependency>
+      <groupId>junit</groupId><artifactId>junit</artifactId><version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>fapcraft-1.12.2-${project.version}</finalName>
+    <!-- Version single source: mcmod.info and sexmod-build.properties are the only
+         filtered resources, so ${project.version} lands in the jar. Everything else
+         (assets, logo, banner) is copied verbatim. mcmod.info keeps its ${mcversion}
+         placeholder — maven leaves unknown tokens untouched and Forge substitutes it. -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>mcmod.info</exclude>
+          <exclude>sexmod-build.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>mcmod.info</include>
+          <include>sexmod-build.properties</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <release>8</release>
+          <compilerArgs>
+            <arg>-Xlint:-options</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.4.1</version>
+        <configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>local:geckolib3-1.12.2-mcp</include>
+                  <include>local:geckolib3-shadowed-libs</include>
+                  <include>local:apache-commons-lang3</include>
+                  <include>io.github.realburst:unrar5j</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>reobf-srg</id>
+            <phase>package</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <javac srcdir="${project.basedir}/tools"
+                       includes="MCRepack.java"
+                       destdir="${project.basedir}/tools"
+                       includeantruntime="false"
+                       fork="true"
+                       failonerror="true"
+                       source="8"
+                       target="8">
+                  <classpath>
+                    <pathelement path="${project.basedir}/lib-repo/local/asm/7.1/asm-7.1.jar" />
+                    <pathelement path="${project.basedir}/lib-repo/local/asm-commons/7.1/asm-commons-7.1.jar" />
+                    <pathelement path="${project.basedir}/lib-repo/local/asm-tree/7.1/asm-tree-7.1.jar" />
+                  </classpath>
+                </javac>
+                <java classname="MCRepack" fork="true" failonerror="true">
+                  <classpath>
+                    <pathelement path="${project.basedir}/tools" />
+                    <pathelement path="${project.basedir}/lib-repo/local/asm/7.1/asm-7.1.jar" />
+                    <pathelement path="${project.basedir}/lib-repo/local/asm-commons/7.1/asm-commons-7.1.jar" />
+                    <pathelement path="${project.basedir}/lib-repo/local/asm-tree/7.1/asm-tree-7.1.jar" />
+                  </classpath>
+                  <arg value="${project.basedir}/lib/mc-1.12.2-srg.jar" />
+                  <arg value="${project.basedir}/tools/mappings/methods.csv" />
+                  <arg value="${project.basedir}/tools/mappings/fields.csv" />
+                  <arg value="mcp2srg" />
+                  <arg value="${project.build.directory}/${project.build.finalName}.jar" />
+                  <arg value="${project.build.directory}/${project.build.finalName}.jar" />
+                  <arg value="${project.basedir}/lib-repo/local/forge-1.12.2-srg/14.23.5.2860/forge-1.12.2-srg-14.23.5.2860.jar,${project.basedir}/lib-repo/local/mc-1.12.2-mcp/1.0/mc-1.12.2-mcp-1.0.jar" />
+                </java>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
