@@ -16,20 +16,14 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**
- * <b>Role.</b> CLIENT-&gt;SERVER request to interact with a regular player the
- * same way as with an NPC girl. Sent when the local player right-clicks another
- * player who has no player-girl of his own.
- * <p>
- * <b>Handler.</b> SERVER-side, scheduled on the main thread. Spawns a temporary
- * {@link JennyPlayerEntity} owned by the target player (marked with
- * {@link AbstractPlayerGirlEntity#isInteractionProxy()}), so the NPC-style
- * interaction menu and the owner-command scenes work unchanged, then tells the
- * requester to open that girl's menu ({@link OpenPlayerGirlMenuPacket}).
- * The proxy is never written to chunk NBT and is discarded when the menu closes
- * without an action, when the scene ends ({@link ResetGirlPacket}), or when
- * either player logs out.
+ * CLIENT->SERVER request to open the temporary Jenny interaction menu for a
+ * regular player. The target must explicitly opt in with the vanilla command:
+ * /tag @s add sexmod_player_interaction_opt_in
+ * Revoke that permission with:
+ * /tag @s remove sexmod_player_interaction_opt_in
  */
 public class PlayerInteractRequestPacket implements IMessage {
+   static final String OPT_IN_TAG = "sexmod_player_interaction_opt_in";
    boolean isValid;
    UUID targetUUID;
 
@@ -55,23 +49,37 @@ public class PlayerInteractRequestPacket implements IMessage {
          if (packet.isValid && ctx.side == Side.SERVER) {
             final EntityPlayerMP sender = ctx.getServerHandler().player;
             FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
-               World world = sender.world;
-               EntityPlayer target = world.getPlayerEntityByUUID(packet.targetUUID);
-               if (target == null || target == sender || target.isDead) {
+               if (sender.isDead || !sender.isEntityAlive()) {
                   return;
                }
 
-               // the requester must not already be a player-girl (that flow has its own menu)
+               World world = sender.world;
+               EntityPlayer target = world.getPlayerEntityByUUID(packet.targetUUID);
+               if (target == null || target == sender || target.isDead || target.isSpectator()
+                  || !target.getTags().contains(OPT_IN_TAG)) {
+                  sender.sendStatusMessage(new net.minecraft.util.text.TextComponentString(
+                     "This player has not enabled player interactions."), true);
+                  return;
+               }
+
+               // The request must correspond to an actual nearby right-click.
+               if (sender.getDistanceSq(target) > 20.25D) {
+                  return;
+               }
+
+               // A transformed player cannot start a second player interaction.
                if (AbstractPlayerGirlEntity.getPlayerGirlByOwner(sender.getPersistentID()) != null) {
                   return;
                }
 
                AbstractPlayerGirlEntity existing = AbstractPlayerGirlEntity.getPlayerGirlByOwner(packet.targetUUID);
                if (existing != null) {
-                  if (existing.isInteractionProxy()) {
+                  if (existing.isInteractionProxy()
+                     && (existing.getProxyViewerUUID() == null
+                        || existing.getProxyViewerUUID().equals(sender.getPersistentID()))) {
                      existing.setProxyViewerUUID(sender.getPersistentID());
-                     PacketHandler.networkWrapper
-                        .sendTo(new OpenPlayerGirlMenuPacket(packet.targetUUID, existing.getEntityId()), sender);
+                     PacketHandler.networkWrapper.sendTo(
+                        new OpenPlayerGirlMenuPacket(packet.targetUUID, existing.getEntityId()), sender);
                   }
                   return;
                }
@@ -86,14 +94,14 @@ public class PlayerInteractRequestPacket implements IMessage {
                proxy.motionZ = 0.0;
                proxy.setPosition(target.posX, target.posY, target.posZ);
                world.spawnEntity(proxy);
-               PacketHandler.networkWrapper
-                  .sendTo(new OpenPlayerGirlMenuPacket(packet.targetUUID, proxy.getEntityId()), sender);
+               PacketHandler.networkWrapper.sendTo(
+                  new OpenPlayerGirlMenuPacket(packet.targetUUID, proxy.getEntityId()), sender);
             });
             return null;
-         } else {
-            Main.LOGGER.warn("received an invalid message @PlayerInteractRequest :(");
-            return null;
          }
+
+         Main.LOGGER.warn("received an invalid message @PlayerInteractRequest :(");
+         return null;
       }
    }
 }
