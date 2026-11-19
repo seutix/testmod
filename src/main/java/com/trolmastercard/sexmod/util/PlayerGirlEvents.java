@@ -248,6 +248,10 @@ public class PlayerGirlEvents {
    @SideOnly(Side.CLIENT)
    @SubscribeEvent
    public void onEntityInteractOpenMenu(EntityInteract event) {
+      // EntityInteract fires on both logical sides; GUI work must stay client-only.
+      if (!event.getEntityPlayer().world.isRemote) {
+         return;
+      }
       if (event.getTarget() instanceof EntityPlayer) {
          if (!event.getEntityPlayer().isSneaking()) {
             if (event.getEntityPlayer().getPersistentID().equals(Minecraft.getMinecraft().player.getPersistentID())) {
@@ -278,6 +282,10 @@ public class PlayerGirlEvents {
    @SideOnly(Side.CLIENT)
    @SubscribeEvent
    public void onEntityInteractLesbo(EntityInteract event) {
+      // This handler also touches client GUI/player state; ignore the server event.
+      if (!event.getEntityPlayer().world.isRemote) {
+         return;
+      }
       if (event.getTarget() instanceof EntityPlayer) {
          if (event.getEntityPlayer().getPersistentID().equals(Minecraft.getMinecraft().player.getPersistentID())) {
             EntityPlayerSP clientPlayer = Minecraft.getMinecraft().player;
