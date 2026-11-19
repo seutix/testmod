@@ -75,8 +75,7 @@ public class PlayerInteractRequestPacket implements IMessage {
                AbstractPlayerGirlEntity existing = AbstractPlayerGirlEntity.getPlayerGirlByOwner(packet.targetUUID);
                if (existing != null) {
                   if (existing.isInteractionProxy()
-                     && (existing.getProxyViewerUUID() == null
-                        || existing.getProxyViewerUUID().equals(sender.getPersistentID()))) {
+                     && sender.getPersistentID().equals(existing.getProxyViewerUUID())) {
                      existing.setProxyViewerUUID(sender.getPersistentID());
                      PacketHandler.networkWrapper.sendTo(
                         new OpenPlayerGirlMenuPacket(packet.targetUUID, existing.getEntityId()), sender);
