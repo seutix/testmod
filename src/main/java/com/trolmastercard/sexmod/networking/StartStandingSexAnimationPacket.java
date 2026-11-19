@@ -66,7 +66,7 @@ public class StartStandingSexAnimationPacket implements IMessage {
                   boolean allowedAction = "action.names.blowjob".equals(packet.animation)
                      || "action.names.boobjob".equals(packet.animation);
                   boolean validViewer = sender.getPersistentID().equals(playerGirl.getProxyViewerUUID());
-                  boolean validTarget = owner != null
+                  boolean validTarget = owner != null && owner.isEntityAlive()
                      && owner.getPersistentID().equals(packet.playerUUID)
                      && owner.getTags().contains(PlayerInteractRequestPacket.OPT_IN_TAG);
                   if (!allowedAction || !validViewer || !validTarget
